@@ -1,0 +1,49 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id:token: write # require for OIDC
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Lint
+        run: npm run Lint
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::311752058283:role/shelfapi-github-actions-role
+          aws-region: ap-south-2
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region ap-south-2 | \
+          docker login --username AWS --password-stdin 311752058283.dkr.ecr.ap-south-2.amazonaws.com
+
+      - name: Build and push image
+        run: |
+          IMAGE=311752058283.dkr.ecr.ap-south-2.amazonaws.com/shelfapi-backend:${{github.sha}}
+          docker build -t $IMAGE .
+          docker push $IMAGE
+
+      - name: Deploy to EC2 via SSM
+        run: |
+          aws ssm send-command \
+            --instance-ids "i-0a511f6ea68da2e12" \
+            --document-name "AWS-RunShellScript" \
+            --parameters '{"commands": ["bash /home/ec2-user/deploy.sh ${{github.sha}}"]}'
