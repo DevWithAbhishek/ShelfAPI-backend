@@ -124,7 +124,7 @@ export class DocsService {
 
     const ext = file.originalname.includes('.') ? file.originalname.split('.').pop() : 'bin';
 
-    const key = `users/${userId}/docs/${docId}/${randomUUID()}.{ext}`;
+    const key = `users/${userId}/docs/${docId}/${randomUUID()}.${ext}`;
 
     await this.s3.send(
       new PutObjectCommand({
