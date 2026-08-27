@@ -81,7 +81,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'none',
       maxAge: REFRESH_TOKEN_TTL,
-      path: '/auth',
+      path: '/api/auth',
     });
   }
 
@@ -96,7 +96,7 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'none',
-      path: '/auth',
+      path: '/api/auth',
     });
   }
 }
