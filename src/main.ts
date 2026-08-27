@@ -13,9 +13,7 @@ async function bootstrap() {
     origin: ['https://shelf-api-frontend.vercel.app', 'http://localhost:5173'],
     credentials: true,
   });
-  app.setGlobalPrefix('api', {
-    exclude: ['docs', 'health', 'users'], // confirm what's actually listed here
-  });
+  app.setGlobalPrefix('api');
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
