@@ -31,7 +31,7 @@ type AuthenticatedRequest = Request & {
   };
 };
 
-@Controller('docs')
+@Controller('api/docs')
 export class DocsController {
   constructor(private docsService: DocsService) {}
 

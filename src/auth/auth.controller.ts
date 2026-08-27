@@ -68,7 +68,7 @@ export class AuthController {
     res.cookie('shelf_access', tokens.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'none',
       maxAge: ACCESS_TOKEN_TTL,
       path: '/',
     });
@@ -79,7 +79,7 @@ export class AuthController {
     res.cookie('shelf_refresh', refreshCookie, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'none',
       maxAge: REFRESH_TOKEN_TTL,
       path: '/auth',
     });
@@ -89,13 +89,13 @@ export class AuthController {
     res.clearCookie('shelf_access', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'none',
       path: '/',
     });
     res.clearCookie('shelf_refresh', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'none',
       path: '/auth',
     });
   }

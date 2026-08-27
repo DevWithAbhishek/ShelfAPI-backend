@@ -9,6 +9,13 @@ async function bootstrap() {
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe());
+  app.enableCors({
+    origin: ['https://shelf-api-frontend.vercel.app', 'http://localhost:5173'],
+    credentials: true,
+  });
+  app.setGlobalPrefix('api', {
+    exclude: ['docs', 'health', 'users'], // confirm what's actually listed here
+  });
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
