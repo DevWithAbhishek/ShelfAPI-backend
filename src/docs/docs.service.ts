@@ -11,12 +11,15 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 type UploadAttachmentInput = {
   userId: string;
   docId: string;
-  file: Express.Multer.File
-}
+  file: Express.Multer.File;
+};
 
 @Injectable()
 export class DocsService {
-  constructor(private readonly prisma: PrismaService, private readonly s3: S3Client) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly s3: S3Client,
+  ) {}
   async findAllDocuments() {}
 
   async addDocument(addDocumentDto: addDocumentDto, userId: string) {
@@ -117,12 +120,14 @@ export class DocsService {
       where: {
         id: docId,
         user_id: userId,
-      }
+      },
     });
 
     if (!doc) throw new FileMissing();
 
-    const ext = file.originalname.includes('.') ? file.originalname.split('.').pop() : 'bin';
+    const ext = file.originalname.includes('.')
+      ? file.originalname.split('.').pop()
+      : 'bin';
 
     const key = `users/${userId}/docs/${docId}/${randomUUID()}.${ext}`;
 
@@ -131,8 +136,8 @@ export class DocsService {
         Bucket: process.env.S3_BUCKET!,
         Key: key,
         Body: file.buffer,
-        ContentType: file.mimetype
-      })
+        ContentType: file.mimetype,
+      }),
     );
 
     return this.prisma.attachment.create({
@@ -142,8 +147,8 @@ export class DocsService {
         folder: '/uploads',
         original_filename: file.originalname,
         mime_type: file.mimetype,
-        size_bytes: file.size
-      }
-    })
+        size_bytes: file.size,
+      },
+    });
   }
 }

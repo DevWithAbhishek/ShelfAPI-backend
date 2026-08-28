@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
@@ -6,14 +7,13 @@ import {
   Patch,
   Post,
   Req,
-  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { DocsService } from './docs.service';
 import { AuthGuard } from '../auth/auth.guard';
-import { type Request, type Response } from 'express';
+import { type Request } from 'express';
 import {
   type updateDocumentDto,
   type addDocumentDto,
@@ -35,13 +35,17 @@ type AuthenticatedRequest = Request & {
 export class DocsController {
   constructor(private docsService: DocsService) {}
 
-  @Get()
-  @UseGuards(AuthGuard)
-  async getAll(@Req() req: AuthenticatedRequest, @Res() res: Response) {}
+  // @Get()
+  // @UseGuards(AuthGuard)
+  // async getAll(@Req() req: AuthenticatedRequest) {
+  //   // const userId = req.user?.sub;
+  //   // if (!userId) throw new Unauthenticated();
+  //   // return await this.docsService.getAllDocs(userId);
+  // }
 
   @Post()
   @UseGuards(AuthGuard)
-  async addOne(@Req() req: AuthenticatedRequest, data: addDocumentDto) {
+  async addOne(@Req() req: AuthenticatedRequest, @Body() data: addDocumentDto) {
     const userId = req.user?.sub;
     if (!userId) throw new Unauthenticated();
     await this.docsService.addDocument(data, userId);
@@ -54,7 +58,7 @@ export class DocsController {
 
   @Delete()
   @UseGuards(AuthGuard)
-  async DeleteAll(@Req() req: AuthenticatedRequest, data: addDocumentDto) {
+  async DeleteAll(@Req() req: AuthenticatedRequest) {
     const userId = req.user?.sub;
     if (!userId) throw new Unauthenticated();
     await this.docsService.deleteAllDocs(userId);
@@ -79,7 +83,7 @@ export class DocsController {
   async updateOne(
     @Req() req: AuthenticatedRequest,
     @Param('id') docId: string,
-    data: updateDocumentDto,
+    @Body() data: updateDocumentDto,
   ) {
     const userId = req.user?.sub;
     if (!userId) throw new Unauthenticated();

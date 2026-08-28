@@ -22,7 +22,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const { method, url } = request;
 
     // Set default value
-    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let status: number = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal Server Error';
     let errorName = 'InternalServerError';
     let stack: string | undefined;
@@ -37,7 +37,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       status = exception.getStatus();
       errorName = exception.name;
       const res = exception.getResponse();
-      message = typeof res === 'string' ? res : (res as any).message;
+      message =
+        typeof res === 'string'
+          ? res
+          : ((res as { message?: string }).message ?? exception.message);
 
       if (status >= 500) stack = exception.stack;
     } else if (exception instanceof Error) {

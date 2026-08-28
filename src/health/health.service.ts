@@ -11,7 +11,7 @@ export class HealthService {
     return {
       app: 'ok',
       database: dbHealthy ? 'ok' : 'down',
-      timeStamp: new Date().toISOString().at,
+      timeStamp: new Date().toISOString(),
     };
   }
 }

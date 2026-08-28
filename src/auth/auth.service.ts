@@ -1,4 +1,4 @@
-import { Injectable, Res } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import {
   BadRequest,
@@ -11,8 +11,8 @@ import { PrismaService } from '../prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import crypto from 'crypto';
 import { REFRESH_TOKEN_TTL } from './auth.constants';
-import type { Response } from 'express';
 import { type loginDto, type signupDto } from '../common/schemas/schema.zod';
+import { authTokens } from './auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -44,7 +44,11 @@ export class AuthService {
   }
 
   // LOGIN
-  async login(loginDto: loginDto, ip?: string, userAgent?: string) {
+  async login(
+    loginDto: loginDto,
+    ip?: string,
+    userAgent?: string,
+  ): Promise<authTokens> {
     try {
       const user = await this.usersService.getUser(loginDto.email);
       if (!user) throw new InvalidCredentials();
@@ -83,7 +87,7 @@ export class AuthService {
   }
 
   // ROTATE TOKENS
-  async rotateTokens(refreshCookie: string) {
+  async rotateTokens(refreshCookie: string): Promise<authTokens> {
     if (!refreshCookie) throw new Unauthenticated();
     const separatorIndex = refreshCookie.indexOf('.');
     if (separatorIndex === -1) throw new InvalidTokens();

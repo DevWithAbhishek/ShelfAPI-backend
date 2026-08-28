@@ -29,5 +29,5 @@ export const updateDocument = z.object({
 
 export type signupDto = z.infer<typeof signup>;
 export type loginDto = z.infer<typeof login>;
-export type addDocumentDto = z.infer<typeof addDocument>
-export type updateDocumentDto = z.infer<typeof updateDocument>
+export type addDocumentDto = z.infer<typeof addDocument>;
+export type updateDocumentDto = z.infer<typeof updateDocument>;

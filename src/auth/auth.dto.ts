@@ -1,5 +1,5 @@
 export class authTokens {
-    accessToken: string;
-    refreshToken: string;
-    sessionId: string;
+  accessToken: string;
+  refreshToken: string;
+  sessionId: string;
 }

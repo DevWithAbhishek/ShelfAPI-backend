@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Post,
-  Req,
-  Res,
-  UsePipes,
-} from '@nestjs/common';
+import { Body, Controller, Post, Req, Res, UsePipes } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import {
@@ -16,6 +9,7 @@ import {
 import { ZodValidationPipe } from '../common/schemas/zod.schema';
 import { authTokens } from './auth.dto';
 import { ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL } from './auth.constants';
+import { Unauthenticated } from '../common/errors/errors-class.error';
 
 @Controller('api/auth')
 export class AuthController {
@@ -34,7 +28,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const tokens = await this.authService.login(
+    const tokens: authTokens = await this.authService.login(
       loginDto,
       req.ip,
       req.get('user-agent'),
@@ -45,16 +39,18 @@ export class AuthController {
 
   @Post('/refresh')
   async refresh(@Req() req: Request, @Res() res: Response) {
-    const refreshCookie = req.cookies?.shelf_refresh;
+    const refreshCookie = req.cookies?.shelf_refresh as string | undefined;
+    if (!refreshCookie) throw new Unauthenticated();
 
-    const tokens = await this.authService.rotateTokens(refreshCookie);
+    const tokens: authTokens =
+      await this.authService.rotateTokens(refreshCookie);
     this.setAuthCookies(res, tokens);
     return { message: 'Tokens refreshed successfully' };
   }
 
   @Post('/logout')
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const refreshCookie = req.cookies?.shelf_refresh;
+    const refreshCookie = req.cookies?.shelf_refresh as string | undefined;
     await this.authService.logout(refreshCookie);
     this.clearAuthCookies(res);
     return {
