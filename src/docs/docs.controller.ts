@@ -35,13 +35,13 @@ type AuthenticatedRequest = Request & {
 export class DocsController {
   constructor(private docsService: DocsService) {}
 
-  // @Get()
-  // @UseGuards(AuthGuard)
-  // async getAll(@Req() req: AuthenticatedRequest) {
-  //   // const userId = req.user?.sub;
-  //   // if (!userId) throw new Unauthenticated();
-  //   // return await this.docsService.getAllDocs(userId);
-  // }
+  @Get()
+  @UseGuards(AuthGuard)
+  async getAll(@Req() req: AuthenticatedRequest) {
+    const userId = req.user?.sub;
+    if (!userId) throw new Unauthenticated();
+    return await this.docsService.findAllDocuments(userId);
+  }
 
   @Post()
   @UseGuards(AuthGuard)
@@ -109,7 +109,9 @@ export class DocsController {
 
   @Post(':id/attachments')
   @UseGuards(AuthGuard)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }),
+  ) // 10MB
   async uploadFile(
     @Req() req: AuthenticatedRequest,
     @Param('id') docId: string,

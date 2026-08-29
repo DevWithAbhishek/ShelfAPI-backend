@@ -20,7 +20,12 @@ export class DocsService {
     private readonly prisma: PrismaService,
     private readonly s3: S3Client,
   ) {}
-  async findAllDocuments() {}
+  async findAllDocuments(userId: string) {
+    return this.prisma.document.findMany({
+      where: { user_id: userId },
+      include: { tags: { include: { tag: true } } },
+    });
+  }
 
   async addDocument(addDocumentDto: addDocumentDto, userId: string) {
     await this.prisma.document.create({
@@ -64,13 +69,18 @@ export class DocsService {
   }
 
   async getOneDocument(docId: string, userId: string) {
-    return await this.prisma.document.findUnique({
+    return this.prisma.document.findFirst({
       where: { id: docId, user_id: userId },
     });
   }
 
   async updateOneDoc(docId: string, userId: string, data: updateDocumentDto) {
-    await this.prisma.document.update({
+    const doc = await this.prisma.document.findFirst({
+      where: { id: docId, user_id: userId },
+    });
+    if (!doc) throw new FileMissing();
+
+    return this.prisma.document.update({
       where: { id: docId },
       data: {
         ...(data.title !== undefined && { title: data.title }),
@@ -110,17 +120,16 @@ export class DocsService {
   }
 
   async deleteOneDoc(docId: string, userId: string) {
-    await this.prisma.document.delete({
+    const doc = await this.prisma.document.findFirst({
       where: { id: docId, user_id: userId },
     });
+    if (!doc) throw new FileMissing();
+    await this.prisma.document.delete({ where: { id: docId } });
   }
 
   async uploadAttachment({ userId, docId, file }: UploadAttachmentInput) {
-    const doc = await this.prisma.document.findUnique({
-      where: {
-        id: docId,
-        user_id: userId,
-      },
+    const doc = await this.prisma.document.findFirst({
+      where: { id: docId, user_id: userId },
     });
 
     if (!doc) throw new FileMissing();
@@ -133,7 +142,7 @@ export class DocsService {
 
     await this.s3.send(
       new PutObjectCommand({
-        Bucket: process.env.S3_BUCKET!,
+        Bucket: process.env.S3_BUCKET_NAME!,
         Key: key,
         Body: file.buffer,
         ContentType: file.mimetype,
