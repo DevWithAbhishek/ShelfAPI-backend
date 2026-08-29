@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import {
-  BadRequest,
   InvalidCredentials,
   InvalidTokens,
   Unauthenticated,
@@ -20,7 +19,7 @@ export class AuthService {
     private usersService: UsersService,
     private prisma: PrismaService,
     private jwt: JwtService,
-  ) { }
+  ) {}
 
   // REGISTER
   async registerUser(signupDto: signupDto) {
@@ -159,10 +158,7 @@ export class AuthService {
     });
     if (!session) return;
 
-    const validToken = await verifyByArgon(
-      session.token_hash,
-      rawRefreshToken,
-    );
+    const validToken = await verifyByArgon(session.token_hash, rawRefreshToken);
     if (!validToken) return;
 
     await this.prisma.session.update({
