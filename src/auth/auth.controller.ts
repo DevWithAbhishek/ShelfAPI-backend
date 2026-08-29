@@ -2,6 +2,7 @@ import { Body, Controller, Post, Req, Res, UsePipes } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import {
+  login,
   type loginDto,
   signup,
   type signupDto,
@@ -23,6 +24,7 @@ export class AuthController {
   }
 
   @Post('/login')
+  @UsePipes(new ZodValidationPipe(login))
   async signin(
     @Body() loginDto: loginDto,
     @Req() req: Request,
