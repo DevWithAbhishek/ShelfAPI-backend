@@ -20,27 +20,23 @@ export class AuthService {
     private usersService: UsersService,
     private prisma: PrismaService,
     private jwt: JwtService,
-  ) {}
+  ) { }
 
   // REGISTER
   async registerUser(signupDto: signupDto) {
-    try {
-      const existingUser = await this.usersService.getUser(signupDto.email);
-      const password = signupDto.password ?? 'Dummy';
-      const passwordHash = await hashByArgon2(password);
+    const existingUser = await this.usersService.getUser(signupDto.email);
+    const password = signupDto.password ?? 'Dummy';
+    const passwordHash = await hashByArgon2(password);
 
-      if (existingUser) throw new InvalidCredentials();
+    if (existingUser) throw new InvalidCredentials();
 
-      await this.prisma.user.create({
-        data: {
-          email: signupDto.email,
-          hashed_password: passwordHash,
-          username: signupDto.name,
-        },
-      });
-    } catch (err) {
-      throw new BadRequest(err);
-    }
+    await this.prisma.user.create({
+      data: {
+        email: signupDto.email,
+        hashed_password: passwordHash,
+        username: signupDto.name,
+      },
+    });
   }
 
   // LOGIN
@@ -49,41 +45,37 @@ export class AuthService {
     ip?: string,
     userAgent?: string,
   ): Promise<authTokens> {
-    try {
-      const user = await this.usersService.getUser(loginDto.email);
-      if (!user) throw new InvalidCredentials();
+    const user = await this.usersService.getUser(loginDto.email);
+    if (!user) throw new InvalidCredentials();
 
-      const validPassword = await verifyByArgon(
-        user.hashed_password,
-        loginDto.password,
-      );
-      if (!validPassword) throw new InvalidCredentials();
+    const validPassword = await verifyByArgon(
+      user.hashed_password,
+      loginDto.password,
+    );
+    if (!validPassword) throw new InvalidCredentials();
 
-      const payload = { sub: user.id, username: user.username };
-      const accessToken = await this.jwt.signAsync(payload, {
-        secret: process.env.JWT_SECRET,
-        expiresIn: '15m',
-      });
+    const payload = { sub: user.id, username: user.username };
+    const accessToken = await this.jwt.signAsync(payload, {
+      secret: process.env.JWT_SECRET,
+      expiresIn: '15m',
+    });
 
-      const refreshToken = crypto.randomBytes(32).toString('base64url');
-      const refreshTokenHash = await hashByArgon2(refreshToken);
-      const family = crypto.randomBytes(24).toString('hex');
+    const refreshToken = crypto.randomBytes(32).toString('base64url');
+    const refreshTokenHash = await hashByArgon2(refreshToken);
+    const family = crypto.randomBytes(24).toString('hex');
 
-      const session = await this.prisma.session.create({
-        data: {
-          family,
-          token_hash: refreshTokenHash,
-          ip: ip ?? null,
-          user_agent: userAgent ?? null,
-          last_seen_ip: ip ?? null,
-          user_id: user.id,
-          expires_at: new Date(Date.now() + REFRESH_TOKEN_TTL),
-        },
-      });
-      return { accessToken, refreshToken, sessionId: session.id };
-    } catch (err) {
-      throw new BadRequest(err);
-    }
+    const session = await this.prisma.session.create({
+      data: {
+        family,
+        token_hash: refreshTokenHash,
+        ip: ip ?? null,
+        user_agent: userAgent ?? null,
+        last_seen_ip: ip ?? null,
+        user_id: user.id,
+        expires_at: new Date(Date.now() + REFRESH_TOKEN_TTL),
+      },
+    });
+    return { accessToken, refreshToken, sessionId: session.id };
   }
 
   // ROTATE TOKENS
@@ -152,38 +144,34 @@ export class AuthService {
 
   // LOGOUT
   async logout(refreshCookie?: string) {
-    try {
-      if (!refreshCookie) return;
-      const separatorIndex = refreshCookie.indexOf('.');
-      if (separatorIndex === -1) return;
+    if (!refreshCookie) return;
+    const separatorIndex = refreshCookie.indexOf('.');
+    if (separatorIndex === -1) return;
 
-      const sessionId = refreshCookie.slice(0, separatorIndex);
-      const rawRefreshToken = refreshCookie.slice(separatorIndex + 1);
-      if (!sessionId || !rawRefreshToken) return;
+    const sessionId = refreshCookie.slice(0, separatorIndex);
+    const rawRefreshToken = refreshCookie.slice(separatorIndex + 1);
+    if (!sessionId || !rawRefreshToken) return;
 
-      const session = await this.prisma.session.findUnique({
-        where: {
-          id: sessionId,
-        },
-      });
-      if (!session) return;
+    const session = await this.prisma.session.findUnique({
+      where: {
+        id: sessionId,
+      },
+    });
+    if (!session) return;
 
-      const validToken = await verifyByArgon(
-        session.token_hash,
-        rawRefreshToken,
-      );
-      if (!validToken) return;
+    const validToken = await verifyByArgon(
+      session.token_hash,
+      rawRefreshToken,
+    );
+    if (!validToken) return;
 
-      await this.prisma.session.update({
-        where: {
-          id: session.id,
-        },
-        data: {
-          revoked_at: new Date(),
-        },
-      });
-    } catch (err) {
-      throw new BadRequest(err);
-    }
+    await this.prisma.session.update({
+      where: {
+        id: session.id,
+      },
+      data: {
+        revoked_at: new Date(),
+      },
+    });
   }
 }
