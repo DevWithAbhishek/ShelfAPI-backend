@@ -14,7 +14,7 @@ import { Unauthenticated } from '../common/errors/errors-class.error';
 
 @Controller('api/auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   @Post('/signup')
   @UsePipes(new ZodValidationPipe(signup))
@@ -66,7 +66,7 @@ export class AuthController {
     res.cookie('shelf_access', tokens.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
+      sameSite: 'lax',
       maxAge: ACCESS_TOKEN_TTL,
       path: '/',
     });
@@ -77,9 +77,9 @@ export class AuthController {
     res.cookie('shelf_refresh', refreshCookie, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
+      sameSite: 'lax',
       maxAge: REFRESH_TOKEN_TTL,
-      path: '/api/auth',
+      path: '/',
     });
   }
 
@@ -87,14 +87,14 @@ export class AuthController {
     res.clearCookie('shelf_access', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
+      sameSite: 'lax',
       path: '/',
     });
     res.clearCookie('shelf_refresh', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
-      path: '/api/auth',
+      sameSite: 'lax',
+      path: '/',
     });
   }
 }
