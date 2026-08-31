@@ -42,6 +42,8 @@ export class DocsController {
   async getAll(
     @Req() req: AuthenticatedRequest,
     @Res({ passthrough: true }) res: Response,
+    @Query('q') q?: string,
+    @Query('filter') filter?: string,
     @Query('sort') sort?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -50,9 +52,11 @@ export class DocsController {
     const userId = req.user?.sub;
     if (!userId) throw new Unauthenticated();
     return this.docsService.findAllDocuments(userId, {
+      q,
+      filter,
       sort,
       page: Number(page) || 1,
-      limit: Number(limit) || 20,
+      limit: Number(limit) || 10,
     });
   }
 

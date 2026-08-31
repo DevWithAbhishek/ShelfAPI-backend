@@ -22,24 +22,31 @@ export class DocsService {
   ) {}
   async findAllDocuments(
     userId: string,
-    {
-      sort,
-      page = 1,
-      limit = 20,
-    }: { sort?: string; page?: number; limit?: number } = {},
+    { q, filter, sort, page = 1, limit = 10 }: {
+      q?: string; filter?: string; sort?: string; page?: number; limit?: number;
+    } = {},
   ) {
-    const [field, direction] = (sort ?? 'created_at desc')
-      .toLowerCase()
-      .split(' ');
+    const [field, direction] = (sort ?? 'created_at desc').toLowerCase().split(' ');
     const orderByField = field === 'date' ? 'created_at' : field;
 
-    return this.prisma.document.findMany({
-      where: { user_id: userId },
-      include: { tags: { include: { tag: true } } },
-      orderBy: { [orderByField]: direction === 'asc' ? 'asc' : 'desc' },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+    const where = {
+      user_id: userId,
+      ...(q && { title: { contains: q, mode: 'insensitive' as const } }),
+      ...(filter && { tags: { some: { tag: { name: filter } } } }),
+    };
+
+    const [docs, total] = await Promise.all([
+      this.prisma.document.findMany({
+        where,
+        include: { tags: { include: { tag: true } } },
+        orderBy: { [orderByField]: direction === 'asc' ? 'asc' : 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.document.count({ where }),
+    ]);
+
+    return { docs, meta: { total, page, limit, hasNextPage: page * limit < total } };
   }
 
   async addDocument(addDocumentDto: addDocumentDto, userId: string) {
