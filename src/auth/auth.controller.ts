@@ -14,7 +14,7 @@ import { Unauthenticated } from '../common/errors/errors-class.error';
 
 @Controller('api/auth')
 export class AuthController {
-  constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService) {}
 
   @Post('/signup')
   @UsePipes(new ZodValidationPipe(signup))

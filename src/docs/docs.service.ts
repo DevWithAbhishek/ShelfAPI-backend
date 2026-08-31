@@ -20,10 +20,25 @@ export class DocsService {
     private readonly prisma: PrismaService,
     private readonly s3: S3Client,
   ) {}
-  async findAllDocuments(userId: string) {
+  async findAllDocuments(
+    userId: string,
+    {
+      sort,
+      page = 1,
+      limit = 20,
+    }: { sort?: string; page?: number; limit?: number } = {},
+  ) {
+    const [field, direction] = (sort ?? 'created_at desc')
+      .toLowerCase()
+      .split(' ');
+    const orderByField = field === 'date' ? 'created_at' : field;
+
     return this.prisma.document.findMany({
       where: { user_id: userId },
       include: { tags: { include: { tag: true } } },
+      orderBy: { [orderByField]: direction === 'asc' ? 'asc' : 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
   }
 

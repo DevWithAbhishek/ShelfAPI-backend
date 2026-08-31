@@ -6,14 +6,16 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
+  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { DocsService } from './docs.service';
 import { AuthGuard } from '../auth/auth.guard';
-import { type Request } from 'express';
+import { type Request, type Response } from 'express';
 import {
   type updateDocumentDto,
   type addDocumentDto,
@@ -37,10 +39,21 @@ export class DocsController {
 
   @Get()
   @UseGuards(AuthGuard)
-  async getAll(@Req() req: AuthenticatedRequest) {
+  async getAll(
+    @Req() req: AuthenticatedRequest,
+    @Res({ passthrough: true }) res: Response,
+    @Query('sort') sort?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    res.set('Cache-Control', 'no-store');
     const userId = req.user?.sub;
     if (!userId) throw new Unauthenticated();
-    return await this.docsService.findAllDocuments(userId);
+    return this.docsService.findAllDocuments(userId, {
+      sort,
+      page: Number(page) || 1,
+      limit: Number(limit) || 20,
+    });
   }
 
   @Post()
